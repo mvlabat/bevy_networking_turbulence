@@ -10,7 +10,7 @@ use std::{
     collections::HashMap,
     error::Error,
     fmt::Debug,
-    net::SocketAddr,
+    net::{IpAddr, SocketAddr},
     sync::{atomic, Arc, Mutex},
 };
 
@@ -139,9 +139,12 @@ impl NetworkResource {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn listen(&mut self, socket_address: SocketAddr) {
+    pub fn listen(&mut self, listen_address: SocketAddr, public_ip_addr: IpAddr) {
         let mut server_socket = {
-            let socket = futures_lite::future::block_on(ServerSocket::listen(socket_address));
+            let socket = futures_lite::future::block_on(ServerSocket::listen(
+                listen_address,
+                public_ip_addr,
+            ));
 
             if let Some(ref conditioner) = self.link_conditioner {
                 socket.with_link_conditioner(conditioner)
@@ -231,7 +234,7 @@ impl NetworkResource {
         self.listeners.push(ServerListener {
             receiver_task,
             sender,
-            socket_address,
+            socket_address: listen_address,
         });
     }
 
