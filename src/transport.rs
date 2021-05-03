@@ -129,13 +129,13 @@ impl Connection for ServerConnection {
         let mut sender = self.sender.take().unwrap();
         let client_address = self.client_address;
         self.channels_task = Some(self.task_pool.spawn(async move {
-            loop {
-                let packet = channels_tx.next().await.unwrap();
+            while let Some(packet) = channels_tx.next().await {
                 sender
                     .send(ServerPacket::new(client_address, (*packet).into()))
                     .await
                     .unwrap();
             }
+            log::error!("Channel stream Disconnected");
         }));
     }
 
